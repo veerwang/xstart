@@ -7,16 +7,14 @@ OBJS:=$(SRCS:=.o)
 DEPS:=$(SRCS:=.dep)
 OBJS:=$(addprefix $(OBJS_DIR),$(OBJS))
 DEPS:=$(addprefix $(DEPS_DIR),$(DEPS))
-ifeq ($(DEBUG),yes)
-COMPILE_FLAG = -g2
-else
-COMPILE_FLAG =
-endif
+
+COMPILE_FLAG:=-std=c++11
+
 all: $(DEPS) $(EXEC) 
 $(DEPS_DIR)%.cpp.dep: %.cpp
 	@set -e; \
 	$(RM) -rf $@.tmp; \
-	gcc -E -MM $^ > $@.tmp; \
+	gcc $(COMPILE_FLAG) -E -MM $^ > $@.tmp; \
  	sed 's,\(.*\)\.o[ :]*,'$(TXTOBJS)'/\1.cpp.o:,g' < $@.tmp > $@; \
 	$(RM) $@.tmp
 $(DEPS_DIR)%.c.dep: %.c
@@ -45,9 +43,9 @@ $(EXEC): $(OBJS)
 $(addprefix $(OBJS_DIR),%.s.o): %.s
 	$(AS) $< -o $@
 $(addprefix $(OBJS_DIR),%.c.o): %.c
-	$(CC) $(COMPILE_FLAG) -c $< -o $@
-$(addprefix $(OBJS_DIR),%.cpp.o): %.cpp
 	$(CPP) $(COMPILE_FLAG) -c $< -o $@
+$(addprefix $(OBJS_DIR),%.cpp.o): %.cpp
+	$(CPP) -std=c++11 $(COMPILE_FLAG) -c $< -o $@
 $(addprefix $(OBJS_DIR),%.jpg.o): %.jpg
 	$(OBJCP) -I binary -O elf32-littlearm -B arm $< $@
 .PHONY: clean

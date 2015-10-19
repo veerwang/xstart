@@ -19,10 +19,10 @@
  * =====================================================================================
  */
 
-#include <standard.h>
+#include "standard.h"
 
-#include "protocolpolicy.hpp"
-#include "framereflectpolicy.hpp"
+//#include "protocolpolicy.hpp"
+//#include "framereflectpolicy.hpp"
 
 template<typename T>
 class ServerPolicy
@@ -98,7 +98,7 @@ class ServerPolicy
 		{
 			int nfds = epoll_wait(epfd,events,MAX_EVENTS_COUNT,0);
 			int fdtemp;
-			CDTProtocolPolicy<> dp;
+//			CDTProtocolPolicy<> dp;
 
 			for ( int i = 0; i<nfds; i++ )
 			{
@@ -133,13 +133,13 @@ class ServerPolicy
 					if ( n > 0 )
 					{
 						recmsg[n] = 0;
-						dp.Store_Raw_Data_Into_DB((unsigned char*)recmsg,n);
+//						dp.Store_Raw_Data_Into_DB((unsigned char*)recmsg,n);
 
-						if ( dp.Get_Length() != 0 )
-						{
-							FrameReflect<> fr;
-							fr.Process_Frame(dp.Analyze(),fdtemp);
-						}
+//						if ( dp.Get_Length() != 0 )
+//						{
+//							FrameReflect<> fr;
+//							fr.Process_Frame(dp.Analyze(),fdtemp);
+//						}
 					}
 					else if ( n == 0 )
 					{
