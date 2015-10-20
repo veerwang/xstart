@@ -28,6 +28,10 @@
 
 #include "globalkey.h"
 
+#include "netclient.h"
+#include "frame.h"
+
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -37,11 +41,64 @@
 	int
 main ( int argc, char *argv[] )
 {
-	std::cout<<"hello the world"<<std::endl;
+	std::cout<<"IPC client program running"<<std::endl;
 
 	WangV::InitKey();
 
 	ThreadHost<ServerPolicy>* 	serverthread = new ThreadHost<ServerPolicy>();
+	Netclient *client = new Netclient;
+	if ( client->Open_Socket() == false )
+	{
+		std::cout<<"can't open socket"<<std::endl;
+	}
+	else
+	{
+		if ( client->Connect_Server() == true )
+		{
+			std::cout<<"server ip: "<<client->Get_Remote_IP()<<std::endl;
+
+			unsigned char *data = new unsigned char[200];
+			Frame fm;
+			fm.Load_Frame(data);
+			client->Send_Data(data,120);
+
+//			int times = 0;
+//LOOP:
+//			if ( client->Poll_Socket_Status() == Netclient::DATAIN  )
+//			{
+//				unsigned char *indata = new unsigned char[200];
+//
+//				int len = client->Get_Data(indata,200);
+//				for (int i=0;i<len;i++ )
+//					printf ( "%x\n",indata[i] );
+//
+//				delete[] indata;
+//				indata = NULL;
+//			}
+//			else
+//				times++;
+//			usleep(1000);
+//			if ( times < 10 ) goto LOOP;
+
+			unsigned char *indata = new unsigned char[200];
+
+			int len = client->Get_Data(indata,200);
+			for (int i=0;i<len;i++ )
+				printf ( "%x\n",indata[i] );
+
+			delete[] indata;
+			indata = NULL;
+
+			delete[] data;
+			data = NULL;
+		}
+		else
+			std::cout<<"connect to server fail"<<std::endl;
+
+		client->Close_Socket();
+	}
+
+
 
 	serverthread->Init(34567);
 	serverthread->Set_Interval_Second(0);
@@ -55,10 +112,13 @@ main ( int argc, char *argv[] )
 		usleep(100);
 	}
 
-	serverthread->Release();
-	serverthread->Stop();
-	delete serverthread;
-	serverthread = NULL;
+
+
+
+//	serverthread->Release();
+//	serverthread->Stop();
+//	delete serverthread;
+//	serverthread = NULL;
 
 	WangV::RestoreKey();
 	return EXIT_SUCCESS;
