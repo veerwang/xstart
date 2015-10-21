@@ -57,35 +57,39 @@ main ( int argc, char *argv[] )
 		{
 			std::cout<<"server ip: "<<client->Get_Remote_IP()<<std::endl;
 
-			unsigned char *data = new unsigned char[200];
+			unsigned char *data = new unsigned char[1024];
 			Frame fm;
-			fm.Load_Frame(data);
+			fm.Register_Frame(data);						// 注册报文
 			client->Send_Data(data,120);
 
-//			int times = 0;
-//LOOP:
-//			if ( client->Poll_Socket_Status() == Netclient::DATAIN  )
-//			{
-//				unsigned char *indata = new unsigned char[200];
-//
-//				int len = client->Get_Data(indata,200);
-//				for (int i=0;i<len;i++ )
-//					printf ( "%x\n",indata[i] );
-//
-//				delete[] indata;
-//				indata = NULL;
-//			}
-//			else
-//				times++;
-//			usleep(1000);
-//			if ( times < 10 ) goto LOOP;
+			unsigned char *indata = new unsigned char[1024];
+			int len = client->Get_Data(indata,200);					// 获得数据，阻塞方式
+			if ( len == 0 )
+			{
+				std::cout<<"1 No read data"<<std::endl;
+				goto Exit;
+			}
+			fm.m_SessionID = indata[4];
 
-			unsigned char *indata = new unsigned char[200];
+			fm.System_Info_Frame(data);						// 获得系统信息报文
+			client->Send_Data(data,74);
 
-			int len = client->Get_Data(indata,200);
-			for (int i=0;i<len;i++ )
-				printf ( "%x\n",indata[i] );
+			len = client->Get_Data(indata,1024);
+			if ( len == 0 )
+			{
+				std::cout<<"2 No read data"<<std::endl;
+				goto Exit;
+			}
 
+			fm.Claim_Frame(data);							// 要求数据报文
+			client->Send_Data(data,205);
+
+//			for (int i=0;i<len;i++ )
+//				printf ( "%x\n",indata[i] );
+
+
+
+Exit:
 			delete[] indata;
 			indata = NULL;
 

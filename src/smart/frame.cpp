@@ -30,11 +30,11 @@ Frame::~Frame ()
 
 /* 
  * ===  FUNCTION  ======================================================================
- *         Name:  Load_Frame
+ *         Name:  Register_Frame
  *  Description:  载入报文 
  * =====================================================================================
  */
-bool Frame::Load_Frame(unsigned char* buf)
+bool Frame::Register_Frame(unsigned char* buf)
 {
 	buf[0] = 0xff; 
 	buf[1] = 0x00; 
@@ -60,4 +60,80 @@ bool Frame::Load_Frame(unsigned char* buf)
 	buf[19]=0x00;
 
 	buf[119] = 0x0a;
+
+	return true;
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  System_Info_Frame
+ *  Description:   
+ * =====================================================================================
+ */
+bool Frame::System_Info_Frame(unsigned char* buf)
+{
+	buf[0] = 0xff;
+	buf[1] = 0x00;
+	buf[2] = 0x00;
+	buf[3] = 0x00;
+	buf[4] = m_SessionID;
+	buf[5] = 0x00;
+	buf[6] = 0x00;
+	buf[7] = 0x00;
+	buf[8] = 0x00;
+	buf[9] = 0x00;
+	buf[10] = 0x00;
+	buf[11] = 0x00;
+	buf[12] = 0x00;
+	buf[13] = 0x00;
+	buf[14] = 0xfc;
+	buf[15] = 0x03;
+
+	buf[16] = 0x36;
+	buf[17] = 0x00;
+	buf[18] = 0x00;
+	buf[19] = 0x00;
+
+	sprintf((char*)(buf+20),"{ \"Name\" : \"SystemInfo\", \"SessionID\" : \"0x%08X\" }.",m_SessionID);
+
+	buf[20+strlen((const char*)(buf+20))-1] = 0x0a;
+
+	return true;
+}
+
+/* 
+ * ===  FUNCTION  ======================================================================
+ *         Name:  Claim_Frame
+ *  Description:  
+ * =====================================================================================
+ */
+bool Frame::Claim_Frame(unsigned char* buf)
+{
+	buf[0] = 0xff;
+	buf[1] = 0x00;
+	buf[2] = 0x00;
+	buf[3] = 0x00;
+	buf[4] = m_SessionID;
+	buf[5] = 0x00;
+	buf[6] = 0x00;
+	buf[7] = 0x00;
+	buf[8] = 0x00;
+	buf[9] = 0x00;
+	buf[10] = 0x00;
+	buf[11] = 0x00;
+	buf[12] = 0x00;
+	buf[13] = 0x00;
+	buf[14] = 0x85;
+	buf[15] = 0x05;
+
+	buf[16] = 0xb9;
+	buf[17] = 0x00;
+	buf[18] = 0x00;
+	buf[19] = 0x00;
+
+	sprintf((char*)(buf+20),"{ \"Name\" : \"OPMonitor\", \"OPMonitor\" : { \"Action\" : \"Claim\", \"Parameter\" : { \"Channel\" : 0, \"CombinMode\" : \"NONE\", \"StreamType\" : \"Main\", \"TransMode\" : \"TCP\" } }, \"SessionID\" : \"0x%02x\" }.",m_SessionID);
+
+	buf[20+strlen((const char*)(buf+20))-1] = 0x0a;
+	
+	return true;
 }

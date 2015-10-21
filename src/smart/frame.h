@@ -26,7 +26,11 @@ class Frame
 		Frame ();                                       /* constructor */
 		~Frame ();                                      /* destructor  */
 
-		bool Load_Frame(unsigned char* buf);
+		bool Register_Frame(unsigned char* buf);
+		bool System_Info_Frame(unsigned char* buf);
+		bool Claim_Frame(unsigned char* buf);
+
+		unsigned char m_SessionID;
 	protected:
 
 	private:
