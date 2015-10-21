@@ -32,6 +32,10 @@
 #include "frame.h"
 
 #define ONEMB  1024*1024*5
+
+#define  BUFNUM 800
+#define  NBUF BUFNUM+1
+
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -43,7 +47,7 @@ main ( int argc, char *argv[] )
 {
 	std::cout<<"IPC client program running"<<std::endl;
 
-	int times = 1;
+	int times = 0;
 
 	WangV::InitKey();
 
@@ -65,58 +69,94 @@ main ( int argc, char *argv[] )
 			client->Send_Data(data,120);
 
 			unsigned char *indata = new unsigned char[ONEMB];
-			int len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
-			if ( len == 0 )
+			int len = 0;
+
+LOOP0:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
-				std::cout<<"1 No read data"<<std::endl;
-				goto Exit;
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"1 No read data"<<std::endl;
+					goto Exit;
+				}
+				printf ( "Register Return len %d\n",len );
+				fm.m_SessionID = indata[4];
 			}
-			fm.m_SessionID = indata[4];
+			else
+				goto LOOP0;
 
 			fm.System_Info_Frame(data);						// 获得系统信息报文
 			client->Send_Data(data,74);
 
-			len = client->Get_Data(indata,ONEMB);					// 必须要读取数据，才能断开网络链接
-			if ( len == 0 )
+LOOP1:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
-				std::cout<<"2 No read data"<<std::endl;
-				goto Exit;
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"2 No read data"<<std::endl;
+					goto Exit;
+				}
+				printf ( "system info len %d\n",len );
 			}
+			else
+				goto LOOP1;
+
 
 			fm.Claim_Frame(data);							// 要求数据报文
 			client->Send_Data(data,205);
-
-			len = client->Get_Data(indata,ONEMB);
-			if ( len == 0 )
+LOOP2:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
-				std::cout<<"3 No read data"<<std::endl;
-				goto Exit;
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"3 No read data"<<std::endl;
+					goto Exit;
+				}
+				printf ( "claim len %d\n",len );
 			}
-			printf ( "claim\n" );
+			else
+				goto LOOP2;
 
 			fm.Set_Systemtime_Frame(data);						// 设置系统时间
 			client->Send_Data(data,122);
 
-			len = client->Get_Data(indata,ONEMB);
-			if ( len == 0 )
+LOOP3:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
-				std::cout<<"4 No read data"<<std::endl;
-				goto Exit;
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"4 No read data"<<std::endl;
+					goto Exit;
+				}
+				printf ( "claim len %d\n",len );
 			}
-			printf ( "system time\n" );
+			else
+				goto LOOP3;
+
 
 			fm.Start_Frame(data);
 			client->Send_Data(data,205);
 
-//			len = client->Get_Data(indata,ONEMB);
-//			if ( len == 0 )
-//			{
-//				std::cout<<"5 No read data"<<std::endl;
-//				goto Exit;
-//			}
-//			printf ( "start frame %d\n",len );
+LOOP4:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
+			{
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"5 No read data"<<std::endl;
+					goto Exit;
+				}
+				printf ( "start len %d\n",len );
+			}
+			else
+				goto LOOP4;
 
-//			while ( times )
+
+//			while ( times )					                        // 是心跳包
 //			{
 //				fm.Heart_Frame(data);
 //				client->Send_Data(data,87);
@@ -126,12 +166,14 @@ main ( int argc, char *argv[] )
 //				printf ( "alive\n" );
 //			}
 
-			sleep(10);								// 等待数据的传输,只下是一口气进行传输
-LOOP1:
+			FILE * pFile;
+			pFile = fopen("TestRealPlay.h264", "wb+");
+
+LOOP99:
 			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
 				len = client->Get_Data(indata,ONEMB);
-				printf ( "read data length = %d\n",len );
+//				printf ( "read data length = %d\n",len );
 				if ( len == 0 )
 				{
 					std::cout<<"6 No read data"<<std::endl;
@@ -139,24 +181,48 @@ LOOP1:
 				}
 				else
 				{
-					FILE * pFile;
-					pFile = fopen("TestRealPlay.h264", "wb+");
-					fwrite(indata,1,len,pFile);
-					fclose(pFile);
+					fwrite(indata,1,len,pFile);         // 写入数据
+					times ++;
+					if ( times != BUFNUM )
+						goto LOOP99;
 				}
-				goto LOOP1;
 			}
+			else
+				goto LOOP99;
+
 
 			fm.Stop_Frame(data);
 			client->Send_Data(data,204);
-
-			len = client->Get_Data(indata,ONEMB);
-			if ( len == 0 )
+LOOP100:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
 			{
-				std::cout<<"6 No read data"<<std::endl;
-				goto Exit;
+				len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
+				if ( len == 0 )
+				{
+					std::cout<<"100 No read data"<<std::endl;
+					goto Exit;
+				}
+				else
+				{
+					printf ( "len == %d\n",len );
+					if ( indata[1] == 0x01 && indata[8] == 0x01 && indata[14] == 0x83 && indata[15] == 0x05 )
+					{
+						fclose(pFile);
+						goto Exit;         	 			// 截获结尾报文 结束                             
+					}
+					else
+					{
+						fwrite(indata,1,len,pFile);
+						times ++;
+						if ( times != NBUF )
+							goto LOOP100;					// 否则继续读取
+						else
+							fclose(pFile);
+					}
+				}
 			}
-			printf ( "stop frame %d\n",len );
+			else
+				goto LOOP100;
 
 Exit:
 			delete[] indata;

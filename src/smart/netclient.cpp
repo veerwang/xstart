@@ -80,12 +80,12 @@ bool Netclient::Open_Socket()
 		return false;
 	}
 
-//	if ( setsockopt(m_Socketfd,SOL_SOCKET,SO_RCVTIMEO,(int8_t *)&m_tv,sizeof(struct timeval)) == -1 )   // 对于IPC来说不可用
-//	{
-//		perror("Set Sockopt error 1");
-//		close(m_Socketfd);
-//		return false;
-//	}
+	if ( setsockopt(m_Socketfd,SOL_SOCKET,SO_RCVTIMEO,(int8_t *)&m_tv,sizeof(struct timeval)) == -1 )   // 对于IPC来说不可用
+	{
+		perror("Set Sockopt error 1");
+		close(m_Socketfd);
+		return false;
+	}
 
 	int rcvbuf = 1024*128;
 	if ( setsockopt(m_Socketfd,SOL_SOCKET,SO_RCVBUF,(const char *)&rcvbuf,sizeof(int) ) == -1 ) 
