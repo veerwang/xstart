@@ -29,6 +29,11 @@ class Frame
 		bool Register_Frame(unsigned char* buf);
 		bool System_Info_Frame(unsigned char* buf);
 		bool Claim_Frame(unsigned char* buf);
+		bool Set_Systemtime_Frame(unsigned char* buf);
+
+		bool Start_Frame(unsigned char* buf);
+		bool Heart_Frame(unsigned char* buf);
+		bool Stop_Frame(unsigned char* buf);
 
 		unsigned char m_SessionID;
 	protected:

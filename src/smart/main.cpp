@@ -31,7 +31,7 @@
 #include "netclient.h"
 #include "frame.h"
 
-
+#define ONEMB  1024*1024*5
 /* 
  * ===  FUNCTION  ======================================================================
  *         Name:  main
@@ -42,6 +42,8 @@
 main ( int argc, char *argv[] )
 {
 	std::cout<<"IPC client program running"<<std::endl;
+
+	int times = 1;
 
 	WangV::InitKey();
 
@@ -62,8 +64,8 @@ main ( int argc, char *argv[] )
 			fm.Register_Frame(data);						// 注册报文
 			client->Send_Data(data,120);
 
-			unsigned char *indata = new unsigned char[1024];
-			int len = client->Get_Data(indata,200);					// 获得数据，阻塞方式
+			unsigned char *indata = new unsigned char[ONEMB];
+			int len = client->Get_Data(indata,ONEMB);				// 获得数据，阻塞方式
 			if ( len == 0 )
 			{
 				std::cout<<"1 No read data"<<std::endl;
@@ -74,7 +76,7 @@ main ( int argc, char *argv[] )
 			fm.System_Info_Frame(data);						// 获得系统信息报文
 			client->Send_Data(data,74);
 
-			len = client->Get_Data(indata,1024);
+			len = client->Get_Data(indata,ONEMB);					// 必须要读取数据，才能断开网络链接
 			if ( len == 0 )
 			{
 				std::cout<<"2 No read data"<<std::endl;
@@ -84,10 +86,77 @@ main ( int argc, char *argv[] )
 			fm.Claim_Frame(data);							// 要求数据报文
 			client->Send_Data(data,205);
 
-//			for (int i=0;i<len;i++ )
-//				printf ( "%x\n",indata[i] );
+			len = client->Get_Data(indata,ONEMB);
+			if ( len == 0 )
+			{
+				std::cout<<"3 No read data"<<std::endl;
+				goto Exit;
+			}
+			printf ( "claim\n" );
 
+			fm.Set_Systemtime_Frame(data);						// 设置系统时间
+			client->Send_Data(data,122);
 
+			len = client->Get_Data(indata,ONEMB);
+			if ( len == 0 )
+			{
+				std::cout<<"4 No read data"<<std::endl;
+				goto Exit;
+			}
+			printf ( "system time\n" );
+
+			fm.Start_Frame(data);
+			client->Send_Data(data,205);
+
+//			len = client->Get_Data(indata,ONEMB);
+//			if ( len == 0 )
+//			{
+//				std::cout<<"5 No read data"<<std::endl;
+//				goto Exit;
+//			}
+//			printf ( "start frame %d\n",len );
+
+//			while ( times )
+//			{
+//				fm.Heart_Frame(data);
+//				client->Send_Data(data,87);
+//
+//				sleep(1);
+//				times --;
+//				printf ( "alive\n" );
+//			}
+
+			sleep(10);								// 等待数据的传输,只下是一口气进行传输
+LOOP1:
+			if ( client->Poll_Socket_Status() == Netclient::DATAIN )
+			{
+				len = client->Get_Data(indata,ONEMB);
+				printf ( "read data length = %d\n",len );
+				if ( len == 0 )
+				{
+					std::cout<<"6 No read data"<<std::endl;
+					goto Exit;
+				}
+				else
+				{
+					FILE * pFile;
+					pFile = fopen("TestRealPlay.h264", "wb+");
+					fwrite(indata,1,len,pFile);
+					fclose(pFile);
+				}
+				goto LOOP1;
+			}
+
+			fm.Stop_Frame(data);
+			client->Send_Data(data,204);
+
+			len = client->Get_Data(indata,ONEMB);
+			if ( len == 0 )
+			{
+				std::cout<<"6 No read data"<<std::endl;
+				goto Exit;
+			}
+			printf ( "stop frame %d\n",len );
 
 Exit:
 			delete[] indata;
@@ -99,10 +168,9 @@ Exit:
 		else
 			std::cout<<"connect to server fail"<<std::endl;
 
+		printf ( "close socket\n" );
 		client->Close_Socket();
 	}
-
-
 
 	serverthread->Init(34567);
 	serverthread->Set_Interval_Second(0);
@@ -117,12 +185,10 @@ Exit:
 	}
 
 
-
-
-//	serverthread->Release();
-//	serverthread->Stop();
-//	delete serverthread;
-//	serverthread = NULL;
+	serverthread->Release();
+	serverthread->Stop();
+	delete serverthread;
+	serverthread = NULL;
 
 	WangV::RestoreKey();
 	return EXIT_SUCCESS;
