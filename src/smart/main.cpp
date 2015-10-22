@@ -252,13 +252,14 @@ MAINLOOP2:
 								printf ( "get stop frame\n" );				// 停止报文
 								captureflag = false;
 
-								usleep(2000);						// 等待传输彻底结束,当停止报文下发后，还有一些数据下行
+								usleep(5000);						// 等待传输彻底结束,当停止报文下发后，还有一些数据下行
 
 								if ( dataclient->Poll_Socket_Status() == Netclient::DATAIN )
 								{
 									len = dataclient->Get_Data(indata,ONEMB);       // 获得数据，阻塞方式
-									fwrite(indata,1,len,pFile);         		// 写入数据
-									printf ( "capture data length = %d\n",len );
+									fm.Save_Data(indata,len);
+									fm.Load_Data(indata,len);
+									fwrite(indata,1,len,pFile);         // 写入数据
 								}
 							}
 						}
@@ -279,8 +280,9 @@ MAINLOOP2:
 			if ( dataclient->Poll_Socket_Status() == Netclient::DATAIN )
 			{
 				len = dataclient->Get_Data(indata,ONEMB);			// 获得数据，阻塞方式
+				fm.Save_Data(indata,len);
+				fm.Load_Data(indata,len);
 				fwrite(indata,1,len,pFile);         // 写入数据
-				printf ( "capture data length = %d\n",len );
 			}
 		}
 	}
@@ -298,39 +300,39 @@ Exit:
 	/* 以下代码将保存的h264文件进行抽取 */
 
 
-	FILE * pReadFile,*pWriteFile;							// 文件再处理
-	pReadFile = fopen("Raw.h264", "r");
-	pWriteFile = fopen("good.h264","wb+");
-
-	int rlen = 0;
-	int ret = 0;
-	while(1)
-	{
-		if ( fread(indata,1,0x10,pReadFile) != 0 )
-		{
-			if ( fread(indata,1,0x04,pReadFile) != 0 )
-			{
-				rlen = (  indata[1] << 8 ) + indata[0];
-
-				if ( (ret = fread(data,1,rlen,pReadFile)) != 0 )
-				{
-					fwrite(data,1,rlen,pWriteFile);
-				}
-				else
-					printf ( "bad 2\n" );
-			}
-			else
-				printf ( "bad 1\n" );
-		}
-		else
-		{
-			if ( feof(pReadFile) )
-				break;
-		}
-	}
-
-	fclose(pWriteFile);
-	fclose(pReadFile);
+//	FILE * pReadFile,*pWriteFile;							// 文件再处理
+//	pReadFile = fopen("Raw.h264", "r");
+//	pWriteFile = fopen("good.h264","wb+");
+//
+//	int rlen = 0;
+//	int ret = 0;
+//	while(1)
+//	{
+//		if ( fread(indata,1,0x10,pReadFile) != 0 )
+//		{
+//			if ( fread(indata,1,0x04,pReadFile) != 0 )
+//			{
+//				rlen = (  indata[1] << 8 ) + indata[0];
+//
+//				if ( (ret = fread(data,1,rlen,pReadFile)) != 0 )
+//				{
+//					fwrite(data,1,rlen,pWriteFile);
+//				}
+//				else
+//					printf ( "bad 2\n" );
+//			}
+//			else
+//				printf ( "bad 1\n" );
+//		}
+//		else
+//		{
+//			if ( feof(pReadFile) )
+//				break;
+//		}
+//	}
+//
+//	fclose(pWriteFile);
+//	fclose(pReadFile);
 
 	delete[] indata;
 	indata = NULL;

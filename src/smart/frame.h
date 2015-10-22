@@ -20,6 +20,8 @@
  * =====================================================================================
  */
 
+#include <list>
+
 class Frame
 {
 	public:
@@ -36,9 +38,17 @@ class Frame
 		bool Stop_Frame(unsigned char* buf);
 
 		unsigned char m_SessionID;
+
+		void Save_Data(unsigned char* buf,int len);
+		bool Load_Data(unsigned char* buf,int& len);
+
+	public:
 	protected:
 
 	private:
+		std::list<unsigned char>	m_DataBuf;
+		int 				m_Package_Length;				// 下个数据包的完整长度
+
 
 }; /* -----  end of class Frame  ----- */
 
