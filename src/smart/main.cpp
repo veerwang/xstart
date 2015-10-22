@@ -252,7 +252,7 @@ MAINLOOP2:
 								printf ( "get stop frame\n" );				// 停止报文
 								captureflag = false;
 
-								usleep(2000);		// 等待传输彻底结束
+								usleep(2000);						// 等待传输彻底结束,当停止报文下发后，还有一些数据下行
 
 								if ( dataclient->Poll_Socket_Status() == Netclient::DATAIN )
 								{
