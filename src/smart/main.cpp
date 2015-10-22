@@ -132,11 +132,13 @@ LOOP3:
 					std::cout<<"4 No read data"<<std::endl;
 					goto Exit;
 				}
-				printf ( "claim len %d\n",len );
+				printf ( "system time len %d\n",len );
 			}
 			else
 				goto LOOP3;
 
+			FILE * pFile;
+			pFile = fopen("TestRealPlay.h264", "wb+");
 
 			fm.Start_Frame(data);
 			client->Send_Data(data,205);
@@ -165,9 +167,6 @@ LOOP4:
 //				times --;
 //				printf ( "alive\n" );
 //			}
-
-			FILE * pFile;
-			pFile = fopen("TestRealPlay.h264", "wb+");
 
 LOOP99:
 			if ( client->Poll_Socket_Status() == Netclient::DATAIN )

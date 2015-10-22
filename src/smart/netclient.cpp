@@ -24,7 +24,7 @@ Netclient::Netclient ()
 	m_ServerIP = new char[100];
 	m_ClientIP = new char[100];
 
-	sprintf ( m_ServerIP,"%s","192.168.10.10" );
+	sprintf ( m_ServerIP,"%s","192.168.10.251" );
 	Getip(m_ClientIP);
 //	sprintf(m_ClientIP,"192.168.10.5");
 	printf ( "%s\n",m_ClientIP );
